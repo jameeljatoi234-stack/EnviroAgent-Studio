@@ -8,15 +8,16 @@ st.set_page_config(
     layout="wide"
 )
 
-# Read API key silently from Streamlit Secrets
-openai_api_key = st.secrets.get("OPENAI_API_KEY", "") or os.getenv("OPENAI_API_KEY", "")
+# Fetch GROQ API key automatically from secrets or environment
+groq_api_key = st.secrets.get("GROQ_API_KEY", "") or os.getenv("GROQ_API_KEY", "")
 
 st.title("🌿 EnviroAgent Studio")
 st.markdown("### Autonomous Multi-Agent System for Environmental Impact Assessment (EIA)")
-st.caption("Powered by Generative AI, CrewAI Multi-Agent Workflows, and OpenAI GPT.")
+st.caption("Powered by Generative AI, CrewAI Multi-Agent Workflows, and Groq (openai/gpt-oss-20b).")
 
 with st.sidebar:
     st.header("🤖 System Overview")
+    st.markdown("#### Active Multi-Agent Team:")
     st.markdown("""
     - **Hydrology Specialist Agent**
     - **Geotechnical & Air Analyst**
@@ -24,7 +25,8 @@ with st.sidebar:
     - **Lead Compliance Synthesizer**
     """)
     st.divider()
-    st.success("System Status: Online")
+    st.success("Model: openai/gpt-oss-20b (via Groq)")
+    st.info("The agents run sequentially, cross-examining domain risks before compiling the Environmental Management Plan (EMP).")
 
 col1, col2 = st.columns(2)
 
@@ -58,8 +60,8 @@ with col2:
 st.divider()
 
 if st.button("🚀 Run Multi-Agent EIA Workflow", type="primary", use_container_width=True):
-    if not openai_api_key:
-        st.error("Missing OPENAI_API_KEY. Please add it to your Streamlit App Settings -> Secrets.")
+    if not groq_api_key:
+        st.error("Missing GROQ_API_KEY in Streamlit Secrets. Please make sure GROQ_API_KEY is saved in Settings -> Secrets.")
     else:
         status_box = st.status("🔄 AI Agent Crew Activated...", expanded=True)
         try:
@@ -75,7 +77,7 @@ if st.button("🚀 Run Multi-Agent EIA Workflow", type="primary", use_container_
                 terrain=terrain,
                 earthwork=earthwork,
                 water_proximity=water_proximity,
-                openai_api_key=openai_api_key
+                groq_api_key=groq_api_key
             )
             
             status_box.update(label="✅ EIA Assessment Complete!", state="complete", expanded=False)
