@@ -8,18 +8,15 @@ st.set_page_config(
     layout="wide"
 )
 
-# Fetch the Groq API key automatically from secrets or environment variables
-groq_api_key = st.secrets.get("GROQ_API_KEY", "") or os.getenv("GROQ_API_KEY", "")
+# Read API key silently from Streamlit Secrets
+openai_api_key = st.secrets.get("OPENAI_API_KEY", "") or os.getenv("OPENAI_API_KEY", "")
 
-# Header Section
 st.title("🌿 EnviroAgent Studio")
 st.markdown("### Autonomous Multi-Agent System for Environmental Impact Assessment (EIA)")
-st.caption("Powered by Generative AI, CrewAI Multi-Agent Workflows, and High-Speed LLM Orchestration.")
+st.caption("Powered by Generative AI, CrewAI Multi-Agent Workflows, and OpenAI GPT.")
 
-# Sidebar Information (No API key prompt)
 with st.sidebar:
     st.header("🤖 System Overview")
-    st.markdown("#### Active Multi-Agent Team:")
     st.markdown("""
     - **Hydrology Specialist Agent**
     - **Geotechnical & Air Analyst**
@@ -27,10 +24,8 @@ with st.sidebar:
     - **Lead Compliance Synthesizer**
     """)
     st.divider()
-    st.success("System Status: Online & Configured")
-    st.info("The agents run sequentially, cross-examining domain risks before compiling the Environmental Management Plan (EMP).")
+    st.success("System Status: Online")
 
-# Input Layout
 col1, col2 = st.columns(2)
 
 with col1:
@@ -62,10 +57,9 @@ with col2:
 
 st.divider()
 
-# Execution Button
 if st.button("🚀 Run Multi-Agent EIA Workflow", type="primary", use_container_width=True):
-    if not groq_api_key:
-        st.error("System configuration error: GROQ_API_KEY is missing in Streamlit App Settings -> Secrets.")
+    if not openai_api_key:
+        st.error("Missing OPENAI_API_KEY. Please add it to your Streamlit App Settings -> Secrets.")
     else:
         status_box = st.status("🔄 AI Agent Crew Activated...", expanded=True)
         try:
@@ -74,7 +68,6 @@ if st.button("🚀 Run Multi-Agent EIA Workflow", type="primary", use_container_
             status_box.write("🐾 [Agent 3/4] Ecological Officer evaluating habitat & local noise thresholds...")
             status_box.write("📋 [Agent 4/4] Lead Compliance Synthesizer generating Environmental Management Plan...")
             
-            # Execute Crew
             final_report = run_eia_crew(
                 project_name=project_name,
                 project_type=project_type,
@@ -82,23 +75,19 @@ if st.button("🚀 Run Multi-Agent EIA Workflow", type="primary", use_container_
                 terrain=terrain,
                 earthwork=earthwork,
                 water_proximity=water_proximity,
-                groq_api_key=groq_api_key
+                openai_api_key=openai_api_key
             )
             
             status_box.update(label="✅ EIA Assessment Complete!", state="complete", expanded=False)
-            
-            # Output Display
             st.success("Draft Environmental Impact Assessment Generated Successfully!")
             st.markdown(final_report)
             
-            # Download Capability
             st.download_button(
                 label="📥 Download EIA Draft Report (.md)",
                 data=final_report,
                 file_name=f"{project_name.replace(' ', '_')}_EIA_Report.md",
                 mime="text/markdown"
             )
-            
         except Exception as e:
             status_box.update(label="❌ Workflow Execution Error", state="error", expanded=True)
             st.error(f"Error during execution: {str(e)}")
