@@ -1,16 +1,17 @@
 import os
-from crewai import Agent, Crew, Process, Task
-from langchain_groq import ChatGroq
+from crewai import Agent, Crew, Process, Task, LLM
 
 def run_eia_crew(project_name, project_type, location, terrain, earthwork, water_proximity, groq_api_key):
     """
     Initializes and executes the EnviroAgent Studio multi-agent workflow.
     """
-    # 1. Initialize High-Performance Groq LLM
-    llm = ChatGroq(
-        model_name="groq/llama-3.3-70b-versatile",
-        temperature=0.2,
-        groq_api_key=groq_api_key
+    # 1. Set environment variable & initialize native CrewAI LLM
+    os.environ["GROQ_API_KEY"] = groq_api_key
+
+    llm = LLM(
+        model="groq/llama-3.3-70b-versatile",
+        api_key=groq_api_key,
+        temperature=0.2
     )
 
     # 2. Agent Definitions (Multi-Agent System)
