@@ -1,20 +1,37 @@
 import os
+import streamlit as st
 from crewai import Agent, Crew, Process, Task, LLM
+
+# -------------------------------------------------------------
+# FIX: Neutralize cache_breakpoint for Groq API compatibility
+# -------------------------------------------------------------
+try:
+    import crewai.llms.cache as _crewai_cache
+    _crewai_cache.mark_cache_breakpoint = lambda msg: msg
+except Exception:
+    pass
+
+try:
+    import crewai.agents.crew_agent_executor as _crew_exec
+    _crew_exec.mark_cache_breakpoint = lambda msg: msg
+except Exception:
+    pass
+# -------------------------------------------------------------
 
 def run_eia_crew(project_name, project_type, location, terrain, earthwork, water_proximity, groq_api_key):
     """
-    Initializes and executes the EnviroAgent Studio multi-agent workflow using openai/gpt-oss-20b on Groq.
+    Initializes and executes the EnviroAgent Studio multi-agent workflow using Groq.
     """
     os.environ["GROQ_API_KEY"] = groq_api_key
 
-    # Initialize openai/gpt-oss-20b via Groq
+    # Initialize LLM with Groq
     llm = LLM(
-        model="groq/openai/gpt-oss-20b",
+        model="groq/llama-3.1-8b-instant",
         api_key=groq_api_key,
         temperature=0.2
     )
 
-    # 1. Domain Specialist Agents
+    # 1. Agent Definitions
     hydrologist = Agent(
         role="Senior Hydrology & Water Resources Specialist",
         goal="Identify surface drainage disruption, groundwater table risks, and erosion runoff potential for infrastructure projects.",
@@ -69,7 +86,7 @@ def run_eia_crew(project_name, project_type, location, terrain, earthwork, water
     Proximity to Water Bodies: {water_proximity}
     """
 
-    # 3. Tasks
+    # 3. Sequential Tasks
     task_hydro = Task(
         description=f"Evaluate hydrological risks using this project data:\n{project_context}\n"
                     "Focus on natural drainage blockages, runoff volume changes, potential stream siltation, "
@@ -102,7 +119,7 @@ def run_eia_crew(project_name, project_type, location, terrain, earthwork, water
         agent=lead_synthesizer
     )
 
-    # 4. Assemble & Execute Workflow
+    # 4. Form and Kickoff Crew
     crew = Crew(
         agents=[hydrologist, geotech_air, ecologist, lead_synthesizer],
         tasks=[task_hydro, task_geotech, task_ecology, task_final_eia],
