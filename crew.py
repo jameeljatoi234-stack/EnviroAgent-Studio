@@ -5,9 +5,9 @@ def run_eia_crew(project_name, project_type, location, terrain, earthwork, water
     """
     Initializes and executes the EnviroAgent Studio multi-agent workflow.
     """
-    # 1. Connect to Groq using its OpenAI-compatible endpoint
+    # 1. Connect to Groq using a verified, globally available model ID
     llm = LLM(
-        model="openai/llama-3.3-70b-versatile",
+        model="openai/llama-3.1-70b-versatile",
         base_url="https://api.groq.com/openai/v1",
         api_key=groq_api_key,
         temperature=0.2
