@@ -1,37 +1,46 @@
 import os
-import streamlit as st
+import litellm
 from crewai import Agent, Crew, Process, Task, LLM
 
-# -------------------------------------------------------------
-# FIX: Neutralize cache_breakpoint for Groq API compatibility
-# -------------------------------------------------------------
-try:
-    import crewai.llms.cache as _crewai_cache
-    _crewai_cache.mark_cache_breakpoint = lambda msg: msg
-except Exception:
-    pass
+# -------------------------------------------------------------------------
+# INTERCEPTOR: Strips 'cache_breakpoint' so Groq never throws BadRequestError
+# -------------------------------------------------------------------------
+litellm.drop_params = True
 
-try:
-    import crewai.agents.crew_agent_executor as _crew_exec
-    _crew_exec.mark_cache_breakpoint = lambda msg: msg
-except Exception:
-    pass
-# -------------------------------------------------------------
+_orig_completion = litellm.completion
+def _clean_completion(*args, **kwargs):
+    if "messages" in kwargs and isinstance(kwargs["messages"], list):
+        for msg in kwargs["messages"]:
+            if isinstance(msg, dict):
+                msg.pop("cache_breakpoint", None)
+    return _orig_completion(*args, **kwargs)
+litellm.completion = _clean_completion
+
+_orig_acompletion = litellm.acompletion
+async def _clean_acompletion(*args, **kwargs):
+    if "messages" in kwargs and isinstance(kwargs["messages"], list):
+        for msg in kwargs["messages"]:
+            if isinstance(msg, dict):
+                msg.pop("cache_breakpoint", None)
+    return await _orig_acompletion(*args, **kwargs)
+litellm.acompletion = _clean_acompletion
+# -------------------------------------------------------------------------
 
 def run_eia_crew(project_name, project_type, location, terrain, earthwork, water_proximity, groq_api_key):
     """
-    Initializes and executes the EnviroAgent Studio multi-agent workflow using Groq.
+    Initializes and executes the EnviroAgent Studio multi-agent workflow
+    using openai/gpt-oss-20b via Groq.
     """
     os.environ["GROQ_API_KEY"] = groq_api_key
 
-    # Initialize LLM with Groq
+    # Initialize openai/gpt-oss-20b model on Groq
     llm = LLM(
-        model="groq/llama-3.1-8b-instant",
+        model="groq/openai/gpt-oss-20b",
         api_key=groq_api_key,
         temperature=0.2
     )
 
-    # 1. Agent Definitions
+    # 1. Specialized Domain Agents
     hydrologist = Agent(
         role="Senior Hydrology & Water Resources Specialist",
         goal="Identify surface drainage disruption, groundwater table risks, and erosion runoff potential for infrastructure projects.",
@@ -86,7 +95,7 @@ def run_eia_crew(project_name, project_type, location, terrain, earthwork, water
     Proximity to Water Bodies: {water_proximity}
     """
 
-    # 3. Sequential Tasks
+    # 3. Tasks
     task_hydro = Task(
         description=f"Evaluate hydrological risks using this project data:\n{project_context}\n"
                     "Focus on natural drainage blockages, runoff volume changes, potential stream siltation, "
