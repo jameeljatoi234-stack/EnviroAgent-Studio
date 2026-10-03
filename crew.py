@@ -28,58 +28,58 @@ litellm.acompletion = _clean_acompletion
 
 def run_eia_crew(project_name, project_type, location, terrain, earthwork, water_proximity, groq_api_key):
     """
-    Initializes and executes the EnviroAgent Studio multi-agent workflow
-    using openai/gpt-oss-20b via Groq.
+    Initializes and executes the General Environmental Impact Assessment (EIA) workflow
+    using openai/gpt-oss-20b on Groq.
     """
     os.environ["GROQ_API_KEY"] = groq_api_key
 
-    # Initialize openai/gpt-oss-20b model on Groq
+    # Initialize openai/gpt-oss-20b on Groq
     llm = LLM(
         model="groq/openai/gpt-oss-20b",
         api_key=groq_api_key,
         temperature=0.2
     )
 
-    # 1. Specialized Domain Agents
+    # 1. Generalized Multi-Disciplinary Environmental Agents
     hydrologist = Agent(
-        role="Senior Hydrology & Water Resources Specialist",
-        goal="Identify surface drainage disruption, groundwater table risks, and erosion runoff potential for infrastructure projects.",
+        role="Water Resources & Hydrology Specialist",
+        goal="Evaluate impacts on natural water flow, drainage changes, potential water pollution, and aquatic systems.",
         backstory=(
-            "You are a licensed Civil and Hydrological Engineer with 15+ years of experience analyzing "
-            "catchment areas, flash-flood risks, runoff coefficients, and culvert/drainage adequacy."
+            "You are an environmental hydrologist who evaluates the impact of development projects on streams, "
+            "rivers, wetlands, drainage basins, and groundwater reserves."
         ),
         llm=llm,
         verbose=False
     )
 
-    geotech_air = Agent(
-        role="Geotechnical & Environmental Emissions Analyst",
-        goal="Quantify soil instability, cut-and-fill erosion, fugitive dust generation, and heavy machinery carbon emissions.",
+    land_air_agent = Agent(
+        role="Land, Soil & Air Quality Analyst",
+        goal="Assess land degradation, soil erosion, dust, chemical runoff, and air emissions from project activities.",
         backstory=(
-            "You are a Geotechnical Engineer and Air Quality Consultant. You evaluate slope stability, "
-            "topsoil preservation, borrow pit impacts, and particulate matter (PM10/PM2.5) during mass excavation."
+            "You are an environmental scientist specializing in soil quality, terrain stability, and atmospheric "
+            "emissions (particulate matter, exhaust fumes, and greenhouse gases)."
         ),
         llm=llm,
         verbose=False
     )
 
     ecologist = Agent(
-        role="Ecological Conservation & Community Impact Officer",
-        goal="Assess biodiversity loss, wildlife habitat corridor severance, noise pollution, and nearby community welfare.",
+        role="Ecology, Biodiversity & Community Safeguard Officer",
+        goal="Identify threats to local flora, wildlife habitats, green cover, and public health or noise concerns.",
         backstory=(
-            "You are an environmental biologist and social safeguard expert specializing in sensitive eco-zones, "
-            "vegetation clearing, noise threshold audits, and public safety mitigation."
+            "You are a conservation ecologist and social safeguard auditor who ensures that vulnerable ecosystems, "
+            "native vegetation, and nearby residential communities remain protected."
         ),
         llm=llm,
         verbose=False
     )
 
     lead_synthesizer = Agent(
-        role="Lead Environmental Compliance Director & EIA Reporter",
-        goal="Synthesize specialist inputs into a regulatory-grade Environmental Impact Assessment (EIA) and actionable Environmental Management Plan (EMP).",
+        role="Lead Environmental Auditor & EIA Coordinator",
+        goal="Synthesize individual specialist evaluations into a professional Environmental Impact Assessment (EIA) report and Environmental Management Plan (EMP).",
         backstory=(
-            "You are a veteran Environmental Consultant with global accreditation. You transform multi-disciplinary technical "
-            "risk assessments into structured, audit-ready reports featuring prioritized mitigation matrices."
+            "You are an experienced international environmental consultant certified in regulatory EIA guidelines. "
+            "You turn multi-domain risk findings into clear, structured, actionable reports with mitigation matrices."
         ),
         llm=llm,
         verbose=False
@@ -87,51 +87,54 @@ def run_eia_crew(project_name, project_type, location, terrain, earthwork, water
 
     # 2. Contextual Project Data
     project_context = f"""
-    Project Name: {project_name}
-    Infrastructure Type: {project_type}
-    Geographical Location: {location}
-    Terrain & Soil Type: {terrain}
-    Earthwork Scale: {earthwork}
-    Proximity to Water Bodies: {water_proximity}
+    Project Title: {project_name}
+    Project Category: {project_type}
+    Location: {location}
+    Surrounding Landscape: {terrain}
+    Key Activities / Description: {earthwork}
+    Proximity to Water Bodies / Forest: {water_proximity}
     """
 
-    # 3. Tasks
+    # 3. Collaborative Tasks
     task_hydro = Task(
-        description=f"Evaluate hydrological risks using this project data:\n{project_context}\n"
-                    "Focus on natural drainage blockages, runoff volume changes, potential stream siltation, "
-                    "and groundwater contamination. Provide concrete risk metrics and engineering precautions.",
-        expected_output="A structured report covering: 1. Catchment & Runoff Alterations, 2. Siltation Risk, 3. Proposed Hydraulic Interventions.",
+        description=f"Evaluate water and hydrological risks based on this project data:\n{project_context}\n"
+                    "Identify risks such as runoff disruption, surface or groundwater pollution, and water consumption impact. "
+                    "Provide clear precautions.",
+        expected_output="A bulleted summary of water-related risks, impacts on natural drainage, and recommended hydrological safeguards.",
         agent=hydrologist
     )
 
-    task_geotech = Task(
-        description=f"Assess geotechnical and atmospheric impacts using this project data:\n{project_context}\n"
-                    "Analyze slope failure risks from cut-and-fill, borrow pit degradations, and fugitive dust (PM2.5/PM10) "
-                    "from machinery operations.",
-        expected_output="A structured report covering: 1. Slope & Soil Degradation, 2. Dust/Particulate Emissions, 3. Earthwork Management Measures.",
-        agent=geotech_air
+    task_land = Task(
+        description=f"Assess land, soil, and air quality impacts based on this project data:\n{project_context}\n"
+                    "Evaluate soil disturbance, potential land contamination, dust generation, and atmospheric emissions during construction and operation.",
+        expected_output="A bulleted summary of land and air quality impacts with practical emission and soil management measures.",
+        agent=land_air_agent
     )
 
     task_ecology = Task(
-        description=f"Examine ecological disruption and social factors using this project data:\n{project_context}\n"
-                    "Evaluate flora/fauna habitat destruction, tree cutting impact, equipment decibel levels on neighboring settlements, "
-                    "and community safety.",
-        expected_output="A structured report covering: 1. Ecological & Habitat Impact, 2. Noise & Air Quality on Settlements, 3. Social Protection Measures.",
+        description=f"Examine ecological disruption and community safeguards based on this project data:\n{project_context}\n"
+                    "Evaluate plant clearing, wildlife disturbance, noise levels, and impacts on adjacent settlements.",
+        expected_output="A bulleted summary of biodiversity risks, wildlife impacts, noise concerns, and community protection measures.",
         agent=ecologist
     )
 
     task_final_eia = Task(
-        description="Synthesize the hydrological, geotechnical, and ecological findings into a formal Environmental Impact Assessment (EIA). "
-                    "Include: 1. Executive Project Summary, 2. Environmental Impact Matrix (Risk, Severity, Probability), "
-                    "3. Comprehensive Environmental Management Plan (EMP) with mitigation techniques, frequency of monitoring, and responsible entities.",
-        expected_output="A professional, comprehensive, Markdown-formatted EIA report ready for client and regulatory submission.",
+        description="Synthesize the water, land/air, and ecological findings into a structured Environmental Impact Assessment (EIA) report. "
+                    "Structure the report with the following clear sections:\n"
+                    "1. Project Executive Summary\n"
+                    "2. Baseline Environmental Setting\n"
+                    "3. Key Environmental Impacts (Water, Land, Air, Biodiversity, Community)\n"
+                    "4. Environmental Management Plan (EMP) in a clear Markdown Table with columns: "
+                    "[Environmental Aspect | Potential Impact | Proposed Mitigation Measure | Monitoring Frequency | Responsible Entity]\n"
+                    "5. Final Recommendation & Conclusion.",
+        expected_output="A comprehensive, professionally formatted EIA and EMP report in clean Markdown.",
         agent=lead_synthesizer
     )
 
-    # 4. Form and Kickoff Crew
+    # 4. Assemble and Run
     crew = Crew(
-        agents=[hydrologist, geotech_air, ecologist, lead_synthesizer],
-        tasks=[task_hydro, task_geotech, task_ecology, task_final_eia],
+        agents=[hydrologist, land_air_agent, ecologist, lead_synthesizer],
+        tasks=[task_hydro, task_land, task_ecology, task_final_eia],
         process=Process.sequential,
         verbose=False
     )
